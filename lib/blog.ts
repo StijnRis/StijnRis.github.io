@@ -1,40 +1,31 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import matter from "gray-matter";
 import { marked } from "marked";
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
 
 export type Post = { slug: string; title: string; date: string; description: string; html: string };
 
-// Minimal frontmatter parser for `key: value` lines between --- fences.
-function parse(file: string): { meta: Record<string, string>; body: string } {
-    const match = file.replace(/^﻿/, "").match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-    if (!match) return { meta: {}, body: file };
-    const meta: Record<string, string> = {};
-    for (const line of match[1].split(/\r?\n/)) {
-        const i = line.indexOf(":");
-        if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim().replace(/^["']|["']$/g, "");
-    }
-    return { meta, body: match[2] };
+// YAML parses `date: 2026-09-26` as a Date; normalise to YYYY-MM-DD.
+function toDateString(value: unknown): string {
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return value ? String(value) : "";
 }
 
 export function getPosts(): Post[] {
     if (!existsSync(BLOG_DIR)) return [];
     return readdirSync(BLOG_DIR)
         .filter((f) => f.endsWith(".md") && f.toLowerCase() !== "readme.md")
-        .map((f) => {
-            const { meta, body } = parse(readFileSync(path.join(BLOG_DIR, f), "utf8"));
-            return {
-                slug: f.replace(/\.md$/, ""),
-                title: meta.title || f.replace(/\.md$/, ""),
-                date: meta.date || "",
-                description: meta.description || "",
-                draft: meta.draft === "true",
-                html: marked.parse(body, { async: false }),
-            };
-        })
-        .filter((p) => !p.draft)
-        .map(({ draft: _draft, ...post }) => post)
+        .map((f) => ({ slug: f.replace(/\.md$/, ""), ...matter(readFileSync(path.join(BLOG_DIR, f), "utf8")) }))
+        .filter(({ data }) => data.draft !== true)
+        .map(({ slug, data, content }) => ({
+            slug,
+            title: data.title ?? slug,
+            date: toDateString(data.date),
+            description: data.description ?? "",
+            html: marked.parse(content, { async: false }),
+        }))
         .sort((a, b) => b.date.localeCompare(a.date));
 }
 

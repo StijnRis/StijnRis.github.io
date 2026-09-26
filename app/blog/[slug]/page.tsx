@@ -31,7 +31,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </Link>
             <time className="mt-8 block font-mono text-xs text-zinc-600">{formatDate(post.date)}</time>
             <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white">{post.title}</h1>
-            <article className="prose mt-10" dangerouslySetInnerHTML={{ __html: post.html }} />
+            <article className="prose prose-invert prose-zinc mt-10 max-w-none prose-a:text-amber-400 prose-pre:border prose-pre:border-white/10" dangerouslySetInnerHTML={{ __html: post.html }} />
         </Section>
     );
 }

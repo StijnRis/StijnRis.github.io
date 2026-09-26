@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
     --background: #050507;
@@ -27,24 +28,3 @@ body {
     background: #fbbf24;
     color: #000;
 }
-
-/* Blog post content rendered from markdown */
-.prose {
-    color: #a1a1aa;
-    font-size: 1.0625rem;
-    line-height: 1.8;
-}
-.prose > * + * { margin-top: 1.25em; }
-.prose h2 { margin-top: 2em; color: #fff; font-size: 1.5rem; font-weight: 600; }
-.prose h3 { margin-top: 1.6em; color: #fff; font-size: 1.2rem; font-weight: 600; }
-.prose a { color: #fbbf24; text-decoration: underline; text-underline-offset: 3px; }
-.prose strong { color: #e4e4e7; }
-.prose ul { list-style: disc; padding-left: 1.5em; }
-.prose ol { list-style: decimal; padding-left: 1.5em; }
-.prose li + li { margin-top: 0.4em; }
-.prose blockquote { border-left: 2px solid #fbbf24; padding-left: 1em; color: #d4d4d8; }
-.prose code { font-family: var(--font-geist-mono), monospace; font-size: 0.9em; color: #e4e4e7; background: #18181b; padding: 0.15em 0.35em; border-radius: 0.3em; }
-.prose pre { background: #0f0f12; border: 1px solid rgb(255 255 255 / 0.08); border-radius: 0.75rem; padding: 1em 1.25em; overflow-x: auto; }
-.prose pre code { background: none; padding: 0; }
-.prose img { border-radius: 0.75rem; }
-.prose hr { border-color: rgb(255 255 255 / 0.1); }
