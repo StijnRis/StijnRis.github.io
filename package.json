@@ -6,8 +6,8 @@
     "dev": "next dev --turbopack",
     "fetch-data": "node scripts/fetch-github-data.mjs",
     "build": "next build",
-    "build:full": "npm run fetch-data && next build",
-    "start": "npx serve out",
+    "build:full": "pnpm fetch-data && next build",
+    "start": "pnpm dlx serve out",
     "lint": "next lint"
   },
   "dependencies": {
@@ -22,5 +22,6 @@
     "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4"
-  }
+  },
+  "packageManager": "pnpm@11.3.0"
 }
