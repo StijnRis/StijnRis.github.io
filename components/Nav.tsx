@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [
+const allItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/work", label: "Work" },
-    { href: "/notes", label: "Notes" },
+    { href: "/blog", label: "Blog" },
     { href: "/contact", label: "Contact" },
 ];
 
-export default function Nav() {
+// The Blog link is hidden until there is at least one post.
+export default function Nav({ showBlog }: { showBlog: boolean }) {
     const pathname = usePathname();
+    const items = allItems.filter((i) => showBlog || i.href !== "/blog");
     const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
     return (

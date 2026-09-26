@@ -8,7 +8,6 @@ const sorts = {
     score: { label: "Score", fn: (a: Repo, b: Repo) => b.score - a.score },
     recent: { label: "Recent", fn: (a: Repo, b: Repo) => Date.parse(b.lastActivity) - Date.parse(a.lastActivity) },
     stars: { label: "Stars", fn: (a: Repo, b: Repo) => b.stars - a.stars || b.score - a.score },
-    commits: { label: "My commits", fn: (a: Repo, b: Repo) => b.stats.myCommits - a.stats.myCommits },
 };
 
 type SortKey = keyof typeof sorts;

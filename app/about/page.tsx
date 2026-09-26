@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
 import { Button, Eyebrow, Section } from "@/components/ui";
-import { github } from "@/lib/github";
+import { github } from "@/lib/github-data";
 import { education, experience, site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "About" };

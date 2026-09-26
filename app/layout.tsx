@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "@/components/Nav";
-import { github } from "@/lib/github";
+import { getPosts } from "@/lib/blog";
+import { github } from "@/lib/github-data";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -43,7 +44,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <Nav />
+                <Nav showBlog={getPosts().length > 0} />
                 <main className="min-h-[70vh]">{children}</main>
                 <footer className="mt-24 border-t border-white/5">
                     <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">

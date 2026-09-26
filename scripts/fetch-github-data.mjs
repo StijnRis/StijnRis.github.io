@@ -10,7 +10,6 @@ import path from "node:path";
 const USER = process.env.GITHUB_USER || "StijnRis";
 const TOKEN = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 const OUT_FILE = path.join(process.cwd(), "data", "github.json");
-const CONFIG_FILE = path.join(process.cwd(), "data", "repo-overrides.json");
 const API = "https://api.github.com";
 
 const headers = {
@@ -152,6 +151,16 @@ function computeScore(s, now) {
     return { score: Math.round(score * 1000) / 10, components };
 }
 
+// Hackathon projects get a bonus, tutorials a penalty. The README is not
+// checked for "tutorial" because framework templates (create-next-app etc.)
+// link to their tutorials.
+function keywordBonus(repo, readme) {
+    const about = [repo.name, repo.description, ...(repo.topics || [])].join(" ").toLowerCase();
+    const hackathon = about.includes("hackathon") || readme.toLowerCase().includes("hackathon");
+    const tutorial = about.includes("tutorial");
+    return (hackathon ? 10 : 0) + (tutorial ? -20 : 0);
+}
+
 async function loadJson(file, fallback) {
     try {
         return JSON.parse(await readFile(file, "utf8"));
@@ -161,13 +170,8 @@ async function loadJson(file, fallback) {
 }
 
 async function main() {
-    const overrides = await loadJson(CONFIG_FILE, {});
     const previous = await loadJson(OUT_FILE, { repos: [] });
     const previousByName = new Map(previous.repos.map((r) => [r.name, r]));
-    const hidden = new Set((overrides.hidden || []).map((n) => n.toLowerCase()));
-    const boosts = overrides.boost || {};
-    const awards = overrides.awards || {};
-    const descriptions = overrides.descriptions || {};
 
     const { data: profile } = await gh(`/users/${USER}`);
     const repos = (await paginate(`/users/${USER}/repos?per_page=100&type=owner&sort=pushed`)).filter(
@@ -237,8 +241,7 @@ async function main() {
             name: repo.name,
             fullName: repo.full_name,
             url: repo.html_url,
-            description: descriptions[repo.name] || repo.description || null,
-            award: awards[repo.name] || null,
+            description: repo.description || null,
             readmeSummary: readme ? readmeSummary(readme) : null,
             homepage: repo.homepage || null,
             image: readme ? findReadmeImage(readme, repo, readmePath) : null,
@@ -279,7 +282,8 @@ async function main() {
             now
         );
         summary.scoreComponents = components;
-        summary.score = Math.round((score + (boosts[repo.name] || 0)) * 10) / 10;
+        summary.bonus = keywordBonus(repo, readme);
+        summary.score = Math.round((score + summary.bonus) * 10) / 10;
         console.log(`  ${repo.name.padEnd(40)} score ${summary.score.toFixed(1).padStart(5)}  commits ${myCommits}/${totalCommits}`);
         return summary;
     }
@@ -287,7 +291,8 @@ async function main() {
     await Promise.all(Array.from({ length: 6 }, worker));
 
     const visible = results
-        .filter((r) => !hidden.has(r.name.toLowerCase()))
+        // This website's own repo is not a project to show on it.
+        .filter((r) => r.name.toLowerCase() !== `${USER.toLowerCase()}.github.io`)
         // Forks where I never committed are not my work.
         .filter((r) => !(r.fork && r.stats.myCommits === 0))
         .sort((a, b) => b.score - a.score);
@@ -297,6 +302,8 @@ async function main() {
         stars: visible.reduce((s, r) => s + r.stars, 0),
         commits: visible.reduce((s, r) => s + r.stats.myCommits, 0),
         linesChanged: visible.reduce((s, r) => s + r.stats.myLines, 0),
+        daysWorked: visible.reduce((s, r) => s + r.stats.daysWorked, 0),
+        hackathons: visible.filter((r) => r.bonus > 0).length,
         languages: Object.entries(
             visible.reduce((acc, r) => {
                 for (const [lang, bytes] of Object.entries(r.languages)) acc[lang] = (acc[lang] || 0) + bytes;
@@ -328,7 +335,7 @@ async function main() {
 
 main().catch(async (err) => {
     console.error(err);
-    // Keep the build going with the committed snapshot if the API is unreachable.
+    // Keep the build going with data from a previous run if the API is unreachable.
     const existing = await loadJson(OUT_FILE, null);
     if (existing) {
         console.warn("Falling back to existing data/github.json");

@@ -1,4 +1,5 @@
-import data from "@/data/github.json";
+// Types and helpers for the repo data. Safe to import from client components;
+// the data itself is loaded in lib/github-data.ts.
 
 export type RepoStats = {
     totalCommits: number;
@@ -19,7 +20,6 @@ export type Repo = {
     url: string;
     description: string | null;
     readmeSummary: string | null;
-    award: string | null;
     homepage: string | null;
     image: string | null;
     language: string | null;
@@ -32,6 +32,7 @@ export type Repo = {
     pushedAt: string;
     lastActivity: string;
     stats: RepoStats;
+    bonus: number;
     score: number;
     scoreComponents: Record<string, number>;
 };
@@ -39,15 +40,9 @@ export type Repo = {
 export type GithubData = {
     generatedAt: string;
     profile: { login: string; name: string | null; avatarUrl: string; url: string; followers: number; publicRepos: number };
-    totals: { repos: number; stars: number; commits: number; linesChanged: number; languages: { name: string; bytes: number }[] };
+    totals: { repos: number; stars: number; commits: number; linesChanged: number; daysWorked: number; hackathons: number; languages: { name: string; bytes: number }[] };
     repos: Repo[];
 };
-
-export const github = data as unknown as GithubData;
-
-export function getRepo(name: string): Repo | undefined {
-    return github.repos.find((r) => r.name === name);
-}
 
 export function prettyName(name: string): string {
     return name

@@ -1,10 +1,16 @@
 import RepoCard from "@/components/RepoCard";
 import { Button, Eyebrow, Section } from "@/components/ui";
-import { formatNumber, github } from "@/lib/github";
-import { highlights, site, trustedBy } from "@/lib/site";
+import { github } from "@/lib/github-data";
+import { site } from "@/lib/site";
 
 export default function Home() {
     const top = github.repos.slice(0, 3);
+    const highlights = [
+        { value: "9.37", label: "BSc GPA out of 10, summa cum laude" },
+        { value: String(github.totals.repos), label: "public projects on GitHub" },
+        { value: String(github.totals.hackathons), label: "hackathon projects" },
+        { value: String(github.totals.daysWorked), label: "days spent building them" },
+    ];
 
     return (
         <>
@@ -33,14 +39,6 @@ export default function Home() {
                         </div>
                     ))}
                 </dl>
-                <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-zinc-500">
-                    <span className="font-mono text-xs uppercase tracking-widest text-zinc-600">Built with & for</span>
-                    {trustedBy.map((t) => (
-                        <span key={t} className="font-medium text-zinc-400">
-                            {t}
-                        </span>
-                    ))}
-                </div>
             </Section>
 
             <Section className="pt-24">
@@ -48,17 +46,14 @@ export default function Home() {
                     <div>
                         <Eyebrow>Top projects</Eyebrow>
                         <h2 className="text-3xl font-semibold tracking-tight text-white">Ranked by my GitHub activity</h2>
-                        <p className="mt-2 text-sm text-zinc-500">
-                            {github.totals.repos} public repos · {formatNumber(github.totals.commits)} commits · {formatNumber(github.totals.linesChanged)} lines changed
-                        </p>
                     </div>
-                    <a href="/work#repositories" className="hidden text-sm text-zinc-400 hover:text-white sm:block">
+                    <a href="/work/" className="hidden text-sm text-zinc-400 hover:text-white sm:block">
                         All projects →
                     </a>
                 </div>
                 <div className="grid gap-6 md:grid-cols-3">
-                    {top.map((r, i) => (
-                        <RepoCard key={r.name} repo={r} rank={i + 1} />
+                    {top.map((r) => (
+                        <RepoCard key={r.name} repo={r} />
                     ))}
                 </div>
             </Section>

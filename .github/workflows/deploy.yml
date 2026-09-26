@@ -48,14 +48,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Fetch GitHub data
-        run: pnpm fetch-data
+      - name: Fetch GitHub data and build
+        run: pnpm build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
-
-      - name: Build with Next.js
-        run: pnpm build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

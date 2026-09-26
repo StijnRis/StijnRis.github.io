@@ -1,4 +1,4 @@
-import { formatNumber, languageBreakdown, languageColor, prettyName, type Repo } from "@/lib/github";
+import { languageBreakdown, languageColor, prettyName, type Repo } from "@/lib/github";
 
 function Placeholder({ repo }: { repo: Repo }) {
     const color = repo.language ? languageColor(repo.language) : "#8b5cf6";
@@ -17,7 +17,7 @@ function Placeholder({ repo }: { repo: Repo }) {
     );
 }
 
-function Stat({ label, value, title }: { label: string; value: React.ReactNode; title?: string }) {
+function Stat({ label, value, title }: { label: string; value: string; title?: string }) {
     return (
         <div title={title}>
             <div className="text-sm font-semibold text-zinc-100">{value}</div>
@@ -50,24 +50,17 @@ function Languages({ repo }: { repo: Repo }) {
     );
 }
 
-export default function RepoCard({ repo, rank }: { repo: Repo; rank?: number }) {
+export default function RepoCard({ repo }: { repo: Repo }) {
     const description = repo.description ?? repo.readmeSummary;
     const s = repo.stats;
-    const breakdown = Object.entries(repo.scoreComponents)
-        .map(([k, v]) => `${k}: ${Math.round(v * 100)}%`)
-        .join("\n");
+    const breakdown = [
+        ...Object.entries(repo.scoreComponents).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`),
+        ...(repo.bonus ? [`bonus: ${repo.bonus > 0 ? "+" : ""}${repo.bonus} pts`] : []),
+    ].join("\n");
 
     const stats = [
         ...(repo.stars > 0 ? [{ label: "Stars", value: `★ ${repo.stars}` }] : []),
-        {
-            label: "Commits",
-            value: (
-                <>
-                    {s.myCommits} <span className="text-xs font-normal text-zinc-500">{Math.round(s.commitShare * 100)}%</span>
-                </>
-            ),
-            title: `${s.myCommits} of ${s.totalCommits} commits by me` },
-        { label: "Lines", value: `${Math.round(s.lineShare * 100)}%`, title: `${formatNumber(s.myLines)} of ${formatNumber(s.totalLines)} lines changed by me` },
+        ...(s.contributors > 1 ? [{ label: "Team", value: `${s.contributors} people` }] : []),
         { label: "Worked", value: `${s.daysWorked} day${s.daysWorked === 1 ? "" : "s"}`, title: `Days with commits by me, ${s.firstCommit} to ${s.lastCommit}` },
     ];
 
@@ -80,9 +73,6 @@ export default function RepoCard({ repo, rank }: { repo: Repo; rank?: number }) 
                 ) : (
                     <Placeholder repo={repo} />
                 )}
-                {rank !== undefined && (
-                    <span className="absolute left-3 top-3 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-zinc-200 backdrop-blur">#{rank}</span>
-                )}
                 <span
                     className="absolute right-3 top-3 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-amber-300 backdrop-blur"
                     title={`Score breakdown\n${breakdown}`}
@@ -93,13 +83,24 @@ export default function RepoCard({ repo, rank }: { repo: Repo; rank?: number }) 
 
             <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
-                    {repo.award && <div className="mb-1 text-xs font-medium text-amber-300">🏆 {repo.award}</div>}
                     <h3 className="text-lg font-semibold text-white">
                         <a href={repo.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             {prettyName(repo.name)}
                         </a>
                     </h3>
-                    {description && <p className="mt-1 line-clamp-3 text-sm text-zinc-400">{description}</p>}
+                    {description && <p className="mt-1 line-clamp-4 text-sm text-zinc-400">{description}</p>}
+                    {repo.topics.length > 0 && (
+                        <ul className="mt-3 flex flex-wrap gap-1.5">
+                            {repo.topics.map((t) => (
+                                <li
+                                    key={t}
+                                    className={`rounded-md px-2 py-0.5 font-mono text-[11px] ${t === "hackathon" ? "bg-amber-400/10 text-amber-300" : "bg-white/5 text-zinc-400"}`}
+                                >
+                                    {t}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
 
                 <div className="mt-auto grid gap-2 border-t border-white/5 pt-3" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
