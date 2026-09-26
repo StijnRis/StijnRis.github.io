@@ -1,7 +1,7 @@
-import { formatDuration, formatNumber, languageColors, prettyName, type Repo } from "@/lib/github";
+import { formatNumber, languageBreakdown, languageColor, prettyName, type Repo } from "@/lib/github";
 
 function Placeholder({ repo }: { repo: Repo }) {
-    const color = languageColors[repo.language ?? ""] ?? "#8b5cf6";
+    const color = repo.language ? languageColor(repo.language) : "#8b5cf6";
     const initials = prettyName(repo.name)
         .split(" ")
         .slice(0, 2)
@@ -10,18 +10,42 @@ function Placeholder({ repo }: { repo: Repo }) {
     return (
         <div
             className="flex h-full w-full items-center justify-center"
-            style={{ background: `radial-gradient(circle at 30% 20%, ${color}55, transparent 60%), linear-gradient(135deg, #18181b, #0b0b0f)` }}
+            style={{ background: `radial-gradient(circle at 30% 20%, color-mix(in srgb, ${color} 35%, transparent), transparent 60%), linear-gradient(135deg, #18181b, #0b0b0f)` }}
         >
             <span className="font-mono text-4xl font-bold tracking-tight text-white/80">{initials}</span>
         </div>
     );
 }
 
-function Stat({ label, value, title }: { label: string; value: string; title?: string }) {
+function Stat({ label, value, title }: { label: string; value: React.ReactNode; title?: string }) {
     return (
         <div title={title}>
             <div className="text-sm font-semibold text-zinc-100">{value}</div>
             <div className="text-[11px] uppercase tracking-wide text-zinc-500">{label}</div>
+        </div>
+    );
+}
+
+function Languages({ repo }: { repo: Repo }) {
+    const languages = languageBreakdown(repo);
+    if (!languages.length) return null;
+    const color = (name: string) => (name === "Other" ? "#52525b" : languageColor(name));
+    return (
+        <div>
+            <div className="flex h-1.5 overflow-hidden rounded-full bg-white/5">
+                {languages.map((l) => (
+                    <span key={l.name} style={{ width: `${l.share * 100}%`, background: color(l.name) }} title={`${l.name} ${Math.round(l.share * 100)}%`} />
+                ))}
+            </div>
+            <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
+                {languages.map((l) => (
+                    <li key={l.name} className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full" style={{ background: color(l.name) }} />
+                        <span className="text-zinc-400">{l.name}</span>
+                        {Math.round(l.share * 100)}%
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
@@ -32,6 +56,20 @@ export default function RepoCard({ repo, rank }: { repo: Repo; rank?: number }) 
     const breakdown = Object.entries(repo.scoreComponents)
         .map(([k, v]) => `${k}: ${Math.round(v * 100)}%`)
         .join("\n");
+
+    const stats = [
+        ...(repo.stars > 0 ? [{ label: "Stars", value: `★ ${repo.stars}` }] : []),
+        {
+            label: "Commits",
+            value: (
+                <>
+                    {s.myCommits} <span className="text-xs font-normal text-zinc-500">{Math.round(s.commitShare * 100)}%</span>
+                </>
+            ),
+            title: `${s.myCommits} of ${s.totalCommits} commits by me` },
+        { label: "Lines", value: `${Math.round(s.lineShare * 100)}%`, title: `${formatNumber(s.myLines)} of ${formatNumber(s.totalLines)} lines changed by me` },
+        { label: "Worked", value: `${s.daysWorked} day${s.daysWorked === 1 ? "" : "s"}`, title: `Days with commits by me, ${s.firstCommit} to ${s.lastCommit}` },
+    ];
 
     return (
         <article className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/60 transition hover:-translate-y-0.5 hover:border-white/25">
@@ -64,32 +102,23 @@ export default function RepoCard({ repo, rank }: { repo: Repo; rank?: number }) 
                     {description && <p className="mt-1 line-clamp-3 text-sm text-zinc-400">{description}</p>}
                 </div>
 
-                <div className="mt-auto grid grid-cols-4 gap-2 border-t border-white/5 pt-3">
-                    <Stat label="Stars" value={`★ ${repo.stars}`} />
-                    <Stat label="Commits" value={`${Math.round(s.commitShare * 100)}%`} title={`${s.myCommits} of ${s.totalCommits} commits by me`} />
-                    <Stat label="Lines" value={`${Math.round(s.lineShare * 100)}%`} title={`${formatNumber(s.myLines)} of ${formatNumber(s.totalLines)} lines changed by me`} />
-                    <Stat label="Active" value={formatDuration(s.activeDays)} title={`${s.activeWeeks} active weeks`} />
+                <div className="mt-auto grid gap-2 border-t border-white/5 pt-3" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
+                    {stats.map((st) => (
+                        <Stat key={st.label} {...st} />
+                    ))}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-zinc-500">
-                    {repo.language ? (
-                        <span className="flex items-center gap-1.5">
-                            <span className="h-2.5 w-2.5 rounded-full" style={{ background: languageColors[repo.language] ?? "#a1a1aa" }} />
-                            {repo.language}
-                        </span>
-                    ) : (
-                        <span />
-                    )}
-                    <span className="flex gap-3">
-                        {repo.homepage && (
-                            <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                                Live ↗
-                            </a>
-                        )}
-                        <a href={repo.url} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                            Code ↗
+                <Languages repo={repo} />
+
+                <div className="flex justify-end gap-3 text-xs text-zinc-500">
+                    {repo.homepage && (
+                        <a href={repo.homepage} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                            Live ↗
                         </a>
-                    </span>
+                    )}
+                    <a href={repo.url} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                        Code ↗
+                    </a>
                 </div>
             </div>
         </article>

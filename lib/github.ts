@@ -8,8 +8,7 @@ export type RepoStats = {
     myLines: number;
     lineShare: number;
     contributors: number;
-    activeWeeks: number;
-    activeDays: number;
+    daysWorked: number;
     firstCommit: string;
     lastCommit: string;
 };
@@ -57,13 +56,6 @@ export function prettyName(name: string): string {
         .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function formatDuration(days: number): string {
-    if (days < 14) return `${days} day${days === 1 ? "" : "s"}`;
-    if (days < 60) return `${Math.round(days / 7)} weeks`;
-    if (days < 730) return `${Math.round(days / 30)} months`;
-    return `${(days / 365).toFixed(1)} years`;
-}
-
 export function formatNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 10_000) return `${Math.round(n / 1000)}k`;
@@ -71,7 +63,7 @@ export function formatNumber(n: number): string {
     return String(n);
 }
 
-export const languageColors: Record<string, string> = {
+const languageColors: Record<string, string> = {
     TypeScript: "#3178c6",
     JavaScript: "#f1e05a",
     Python: "#3572A5",
@@ -81,6 +73,32 @@ export const languageColors: Record<string, string> = {
     Svelte: "#ff3e00",
     HTML: "#e34c26",
     CSS: "#663399",
+    SCSS: "#c6538c",
     Shell: "#89e051",
     Go: "#00ADD8",
+    Dockerfile: "#384d54",
+    Pug: "#a86454",
+    ShaderLab: "#222c37",
+    HLSL: "#aace60",
+    "Jupyter Notebook": "#DA5B0B",
 };
+
+export function languageColor(language: string): string {
+    if (languageColors[language]) return languageColors[language];
+    // Stable fallback colour for languages not in the list.
+    let hash = 0;
+    for (const c of language) hash = (hash * 31 + c.charCodeAt(0)) | 0;
+    return `hsl(${Math.abs(hash) % 360} 55% 55%)`;
+}
+
+// Languages of a repo with their share of the code, largest first. Languages
+// below `minShare` are merged into "Other".
+export function languageBreakdown(repo: Repo, minShare = 0.03): { name: string; share: number }[] {
+    const entries = Object.entries(repo.languages);
+    const total = entries.reduce((s, [, bytes]) => s + bytes, 0);
+    if (!total) return repo.language ? [{ name: repo.language, share: 1 }] : [];
+    const sorted = entries.map(([name, bytes]) => ({ name, share: bytes / total })).sort((a, b) => b.share - a.share);
+    const main = sorted.filter((l) => l.share >= minShare);
+    const other = sorted.filter((l) => l.share < minShare).reduce((s, l) => s + l.share, 0);
+    return other >= 0.005 ? [...main, { name: "Other", share: other }] : main;
+}

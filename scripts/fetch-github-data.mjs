@@ -57,6 +57,15 @@ async function contributorStats(fullName) {
     return null;
 }
 
+// Distinct calendar days (Amsterdam time) on which I authored a commit.
+const dayFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Amsterdam" });
+async function myCommitDays(fullName) {
+    const { status } = await gh(`/repos/${fullName}/commits?author=${USER}&per_page=1`, { allow404: true });
+    if (status !== 200) return [];
+    const commits = await paginate(`/repos/${fullName}/commits?author=${USER}&per_page=100`);
+    return [...new Set(commits.map((c) => dayFormat.format(new Date(c.commit.author.date))))].sort();
+}
+
 const BADGE_PATTERN = /shields\.io|badge|badgen|travis-ci|codecov|circleci|\/workflows\/|actions\/workflow|vercel\.com\/button|deploy-button|forthebadge|img\.shields|coveralls|snyk\.io|sonarcloud|app\.netlify\.com/i;
 
 function resolveImage(src, repo, readmePath) {
@@ -122,8 +131,7 @@ function computeScore(s, now) {
         ownership: clamp01(0.5 * s.commitShare + 0.5 * s.lineShare),
         popularity: logScale(s.stars + 0.5 * s.forks, 25),
         effort: logScale(s.myCommits, 150),
-        duration: logScale(s.activeDays, 365),
-        consistency: logScale(s.activeWeeks, 20),
+        duration: logScale(s.daysWorked, 60),
         recency: Math.exp(-monthsSincePush / 18),
         polish:
             (s.description ? 0.3 : 0) +
@@ -135,8 +143,7 @@ function computeScore(s, now) {
         ownership: 0.12,
         popularity: 0.13,
         effort: 0.2,
-        duration: 0.1,
-        consistency: 0.1,
+        duration: 0.2,
         recency: 0.15,
         polish: 0.2,
     };
@@ -188,8 +195,9 @@ async function main() {
     };
 
     async function processRepo(repo) {
-        const [stats, languagesRes, readmeRes] = await Promise.all([
+        const [stats, days, languagesRes, readmeRes] = await Promise.all([
             contributorStats(repo.full_name),
+            myCommitDays(repo.full_name),
             gh(`/repos/${repo.full_name}/languages`, { allow404: true }),
             gh(`/repos/${repo.full_name}/readme`, { allow404: true }),
         ]);
@@ -203,13 +211,10 @@ async function main() {
 
         const prev = previousByName.get(repo.name);
         let totalCommits = 0, myCommits = 0, totalLines = 0, myLines = 0, contributors = 0;
-        let myFirstWeek = null, myLastWeek = null, activeWeeks = 0;
 
         if (stats === null && prev) {
             // Stats still computing; reuse numbers from the previous build.
-            ({ totalCommits, myCommits, totalLines, myLines, contributors, activeWeeks } = prev.stats);
-            myFirstWeek = prev.stats.firstCommit ? Date.parse(prev.stats.firstCommit) / 1000 : null;
-            myLastWeek = prev.stats.lastCommit ? Date.parse(prev.stats.lastCommit) / 1000 : null;
+            ({ totalCommits, myCommits, totalLines, myLines, contributors } = prev.stats);
         } else if (stats) {
             contributors = stats.length;
             for (const c of stats) {
@@ -218,22 +223,15 @@ async function main() {
                 for (const w of c.weeks) {
                     const lines = w.a + w.d;
                     totalLines += lines;
-                    if (isMe) {
-                        myLines += lines;
-                        if (w.c > 0) {
-                            activeWeeks++;
-                            if (myFirstWeek === null || w.w < myFirstWeek) myFirstWeek = w.w;
-                            if (myLastWeek === null || w.w > myLastWeek) myLastWeek = w.w;
-                        }
-                    }
+                    if (isMe) myLines += lines;
                 }
                 if (isMe) myCommits += c.total;
             }
         }
 
-        const firstCommit = myFirstWeek ? new Date(myFirstWeek * 1000).toISOString() : repo.created_at;
-        const lastCommit = myLastWeek ? new Date((myLastWeek + 6 * 86400) * 1000).toISOString() : repo.pushed_at;
-        const activeDays = Math.max(1, Math.round((Date.parse(lastCommit) - Date.parse(firstCommit)) / 86400000));
+        const daysWorked = days.length;
+        const firstCommit = days[0] ?? repo.created_at.slice(0, 10);
+        const lastCommit = days.at(-1) ?? repo.pushed_at.slice(0, 10);
 
         const summary = {
             name: repo.name,
@@ -261,8 +259,7 @@ async function main() {
                 myLines,
                 lineShare: totalLines ? myLines / totalLines : 0,
                 contributors,
-                activeWeeks,
-                activeDays,
+                daysWorked,
                 firstCommit,
                 lastCommit,
             },

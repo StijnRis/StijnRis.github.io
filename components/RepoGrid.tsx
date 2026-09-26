@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import RepoCard from "@/components/RepoCard";
-import type { Repo } from "@/lib/github";
+import { languageBreakdown, type Repo } from "@/lib/github";
 
 const sorts = {
     score: { label: "Score", fn: (a: Repo, b: Repo) => b.score - a.score },
@@ -13,26 +13,25 @@ const sorts = {
 
 type SortKey = keyof typeof sorts;
 
+const repoLanguages = (r: Repo) => languageBreakdown(r).map((l) => l.name).filter((l) => l !== "Other");
+
 export default function RepoGrid({ repos }: { repos: Repo[] }) {
     const [sort, setSort] = useState<SortKey>("score");
     const [language, setLanguage] = useState<string>("All");
 
     const languages = useMemo(() => {
         const counts = new Map<string, number>();
-        for (const r of repos) if (r.language) counts.set(r.language, (counts.get(r.language) ?? 0) + 1);
+        for (const r of repos) for (const l of repoLanguages(r)) counts.set(l, (counts.get(l) ?? 0) + 1);
         return ["All", ...[...counts.entries()].sort((a, b) => b[1] - a[1]).map(([l]) => l)];
     }, [repos]);
 
-    // Rank is always by score, whatever the current sort order.
-    const rankOf = useMemo(() => new Map([...repos].sort(sorts.score.fn).map((r, i) => [r.name, i + 1])), [repos]);
-
     const shown = useMemo(
-        () => repos.filter((r) => language === "All" || r.language === language).sort(sorts[sort].fn),
+        () => repos.filter((r) => language === "All" || repoLanguages(r).includes(language)).sort(sorts[sort].fn),
         [repos, sort, language]
     );
 
     const pill = (active: boolean) =>
-        `rounded-full px-3 py-1 text-sm transition ${active ? "bg-white text-black" : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"}`;
+        `whitespace-nowrap rounded-full px-3 py-1 text-sm transition ${active ? "bg-white text-black" : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"}`;
 
     return (
         <div>
@@ -55,7 +54,7 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {shown.map((r) => (
-                    <RepoCard key={r.name} repo={r} rank={rankOf.get(r.name)} />
+                    <RepoCard key={r.name} repo={r} />
                 ))}
             </div>
         </div>

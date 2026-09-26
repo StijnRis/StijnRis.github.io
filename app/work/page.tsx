@@ -12,8 +12,7 @@ const scoreParts = [
     ["Recency", "15%", "time since my last commit"],
     ["Popularity", "13%", "stars and forks"],
     ["Ownership", "12%", "share of commits and lines changed by me"],
-    ["Duration", "10%", "time between my first and last commit"],
-    ["Consistency", "10%", "number of weeks I committed"],
+    ["Duration", "20%", "number of days I committed to it"],
 ];
 
 export default function Work() {
