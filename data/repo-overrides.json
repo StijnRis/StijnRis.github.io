@@ -1,0 +1,28 @@
+{
+  "hidden": ["StijnRis.github.io"],
+  "boost": {
+    "bunq-hackathon-7.0": 12,
+    "match-route": 12,
+    "aiso-prosus-hackathon-2026": 12,
+    "forget-me-not": 8,
+    "hack_the_beach_2026": 8,
+    "tutorial-nextjs-dashboard": -20,
+    "tutorial-antigravity-cli-hands-on": -20,
+    "tutorial-react-router-address-book": -20
+  },
+  "awards": {
+    "bunq-hackathon-7.0": "Top 3 · bunq Multimodal AI Hackathon",
+    "match-route": "3rd place · RouteStack.ai Build Challenge",
+    "aiso-prosus-hackathon-2026": "2nd place · AISO x Prosus Hackathon",
+    "forget-me-not": "30% of audience vote · Cursor Hackathon",
+    "hack_the_beach_2026": "Hack on the Beach · TU Delft x IMC"
+  },
+  "descriptions": {
+    "bunq-hackathon-7.0": "bunqAhead: connects your calendar to your bank to predict what upcoming plans will cost and create saving goals automatically.",
+    "match-route": "MatchRoute: a multi-agent mediator that turns messy group-trip input into live maps, budget meters and polls.",
+    "hack_the_beach_2026": "Shelfwise: snap a photo of a grocery shelf and see the environmental impact of every product at a glance.",
+    "forget-me-not": "An app that supports people living with dementia by pairing memories of loved ones with calming music.",
+    "aiso-prosus-hackathon-2026": "An autonomous agent that runs a simulated restaurant: suppliers, menu, pricing, staffing and marketing.",
+    "card-game-hackathon": "A multiplayer card game built during a hackathon."
+  }
+}
