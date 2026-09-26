@@ -1,11 +1,13 @@
 {
-  "name": "github_userpage",
+  "name": "stijnris-website",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "fetch-data": "node scripts/fetch-github-data.mjs",
     "build": "next build",
-    "start": "next start",
+    "build:full": "npm run fetch-data && next build",
+    "start": "npx serve out",
     "lint": "next lint"
   },
   "dependencies": {
