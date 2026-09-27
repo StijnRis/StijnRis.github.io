@@ -1,7 +1,7 @@
 import RepoCard from "@/components/RepoCard";
-import { Button, Eyebrow, Section } from "@/components/ui";
-import { github, linkedin } from "@/lib/github-data";
-import { site } from "@/lib/site";
+import { Button, Eyebrow, OrgLogo, Section } from "@/components/ui";
+import { github, linkedin, photo } from "@/lib/github-data";
+import { organisations, site, type OrganisationKey } from "@/lib/site";
 
 export default function Home() {
     const top = github.repos.slice(0, 3);
@@ -14,16 +14,24 @@ export default function Home() {
 
     return (
         <>
-            <Section className="relative pb-20 pt-24 sm:pt-32">
-                <div className="pointer-events-none absolute -top-10 left-1/2 -z-10 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-500/20 via-rose-500/15 to-sky-500/20 blur-3xl" />
-                <Eyebrow>{site.role}</Eyebrow>
-                <h1 className="max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-7xl">
-                    Hi, I&apos;m Stijn. I turn hard problems into{" "}
-                    <span className="bg-gradient-to-r from-amber-300 via-orange-400 to-rose-400 bg-clip-text text-transparent">working software</span>, fast.
+            <Section className="pb-16 pt-20 sm:pt-28">
+                <div className="flex items-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo} alt={`Photo of ${site.name}`} width={64} height={64} className="h-16 w-16 rounded-full border border-line object-cover" />
+                    <div>
+                        <div className="font-semibold text-fg">{site.name}</div>
+                        <div className="flex items-center gap-2 text-sm text-muted">
+                            <OrgLogo org="tudelft" size="sm" />
+                            {site.role}
+                        </div>
+                    </div>
+                </div>
+                <h1 className="mt-10 max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight text-fg sm:text-7xl">
+                    Hi, I&apos;m Stijn. I turn hard problems into <span className="text-accent">working software</span>, fast.
                 </h1>
-                <p className="mt-6 max-w-2xl text-lg text-zinc-400">{site.tagline}</p>
+                <p className="mt-6 max-w-2xl text-lg text-muted">{site.tagline}</p>
                 <div className="mt-10 flex flex-wrap gap-3">
-                    <Button href="/work">See my work →</Button>
+                    <Button href="/projects">See my projects →</Button>
                     <Button href="/contact" variant="ghost">
                         Get in touch
                     </Button>
@@ -31,23 +39,34 @@ export default function Home() {
             </Section>
 
             <Section>
-                <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-4">
+                <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
                     {highlights.map((h) => (
-                        <div key={h.label} className="bg-zinc-950 p-6">
-                            <dt className="text-3xl font-semibold text-white">{h.value}</dt>
-                            <dd className="mt-1 text-sm text-zinc-500">{h.label}</dd>
+                        <div key={h.label} className="bg-surface p-6">
+                            <dt className="text-3xl font-semibold text-fg">{h.value}</dt>
+                            <dd className="mt-1 text-sm text-subtle">{h.label}</dd>
                         </div>
                     ))}
                 </dl>
             </Section>
 
+            <Section className="pt-16">
+                <p className="text-sm text-subtle">Studied and worked at</p>
+                <ul className="mt-4 flex flex-wrap gap-x-8 gap-y-4">
+                    {(Object.keys(organisations) as OrganisationKey[]).map((key) => (
+                        <li key={key}>
+                            <a href={organisations[key].url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm font-medium text-muted hover:text-fg">
+                                <OrgLogo org={key} />
+                                {organisations[key].name}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </Section>
+
             <Section className="pt-24">
                 <div className="mb-8 flex items-end justify-between gap-4">
-                    <div>
-                        <Eyebrow>Top projects</Eyebrow>
-                        <h2 className="text-3xl font-semibold tracking-tight text-white">Ranked by my GitHub activity</h2>
-                    </div>
-                    <a href="/work/" className="hidden text-sm text-zinc-400 hover:text-white sm:block">
+                    <h2 className="text-3xl font-semibold tracking-tight text-fg">Top projects</h2>
+                    <a href="/projects/" className="hidden text-sm text-muted hover:text-fg sm:block">
                         All projects →
                     </a>
                 </div>
@@ -59,9 +78,10 @@ export default function Home() {
             </Section>
 
             <Section className="pt-24">
-                <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 to-zinc-950 p-10 sm:p-14">
-                    <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-white">Looking for someone who learns fast and ships under pressure?</h2>
-                    <p className="mt-3 max-w-xl text-zinc-400">
+                <div className="rounded-3xl border border-line bg-surface p-10 sm:p-14">
+                    <Eyebrow>Open to opportunities</Eyebrow>
+                    <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-fg">Looking for someone who learns fast and ships under pressure?</h2>
+                    <p className="mt-3 max-w-xl text-muted">
                         I&apos;m open to software engineering, AI and quantitative roles in and around {site.location.split(",")[0]}.
                     </p>
                     <div className="mt-8 flex flex-wrap gap-3">

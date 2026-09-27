@@ -21,32 +21,32 @@ export default function Contact() {
                             href={c.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-between rounded-2xl border border-white/10 bg-zinc-900/50 p-5 transition hover:border-white/30"
+                            className="flex items-center justify-between rounded-2xl border border-line bg-surface p-5 transition hover:border-line-strong"
                         >
                             <span>
-                                <span className="block font-mono text-xs uppercase tracking-widest text-zinc-500">{c.label}</span>
-                                <span className="mt-1 block text-white">{c.value}</span>
+                                <span className="block font-mono text-xs uppercase tracking-widest text-subtle">{c.label}</span>
+                                <span className="mt-1 block text-fg">{c.value}</span>
                             </span>
-                            <span className="text-zinc-500">↗</span>
+                            <span className="text-subtle">↗</span>
                         </a>
                     ))}
-                    <div className="rounded-2xl border border-white/10 p-5 text-sm text-zinc-400">
-                        <span className="block font-mono text-xs uppercase tracking-widest text-zinc-500">Location</span>
-                        <span className="mt-1 block text-white">{site.location}</span>
+                    <div className="rounded-2xl border border-line p-5 text-sm text-muted">
+                        <span className="block font-mono text-xs uppercase tracking-widest text-subtle">Location</span>
+                        <span className="mt-1 block text-fg">{site.location}</span>
                         <span className="block">{site.timezone}</span>
                     </div>
                 </div>
                 {site.formEndpoint ? (
                     <ContactForm endpoint={site.formEndpoint} />
                 ) : linkedin ? (
-                    <div className="flex flex-col justify-center rounded-3xl border border-white/10 bg-zinc-950 p-8">
-                        <h2 className="text-2xl font-semibold text-white">The fastest way to reach me</h2>
-                        <p className="mt-3 text-zinc-400">Send me a message on LinkedIn and I&apos;ll get back to you.</p>
+                    <div className="flex flex-col justify-center rounded-3xl border border-line bg-surface p-8">
+                        <h2 className="text-2xl font-semibold text-fg">The fastest way to reach me</h2>
+                        <p className="mt-3 text-muted">Send me a message on LinkedIn and I&apos;ll get back to you.</p>
                         <a
                             href={linkedin.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-6 self-start rounded-full bg-white px-6 py-2.5 text-sm font-medium text-black transition hover:bg-amber-300"
+                            className="mt-6 self-start rounded-full bg-fg px-6 py-2.5 text-sm font-medium text-bg transition hover:opacity-85"
                         >
                             Message me on LinkedIn ↗
                         </a>

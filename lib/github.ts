@@ -1,6 +1,8 @@
 // Types and helpers for the repo data. Safe to import from client components;
 // the data itself is loaded in lib/github-data.ts.
 
+export type ActivePeriod = { start: string; end: string; days: number };
+
 export type RepoStats = {
     totalCommits: number;
     myCommits: number;
@@ -12,6 +14,7 @@ export type RepoStats = {
     daysWorked: number;
     firstCommit: string;
     lastCommit: string;
+    activePeriods?: ActivePeriod[];
 };
 
 export type Repo = {
@@ -107,4 +110,25 @@ export function languageBreakdown(repo: Repo, minShare = 0.03): { name: string; 
     const main = sorted.filter((l) => l.share >= minShare);
     const other = sorted.filter((l) => l.share < minShare).reduce((s, l) => s + l.share, 0);
     return other >= 0.005 ? [...main, { name: "Other", share: other }] : main;
+}
+
+const monthYear = (date: string) => new Date(date).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+const month = (date: string) => new Date(date).toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" });
+
+// "Mar 2024", "Mar – Jun 2024" or "Nov 2024 – Feb 2025".
+export function formatPeriod(start: string, end: string): string {
+    if (start.slice(0, 7) === end.slice(0, 7)) return monthYear(start);
+    if (start.slice(0, 4) === end.slice(0, 4)) return `${month(start)} – ${monthYear(end)}`;
+    return `${monthYear(start)} – ${monthYear(end)}`;
+}
+
+// When I was actively developing a repo. Single-day touch-ups next to real
+// periods of work are left out, and more than two periods collapse into one range.
+export function activeDates(repo: Repo): string[] {
+    const periods = repo.stats.activePeriods ?? [{ start: repo.stats.firstCommit, end: repo.stats.lastCommit, days: repo.stats.daysWorked }];
+    const substantial = periods.filter((p) => p.days > 1);
+    const shown = substantial.length ? substantial : periods;
+    if (!shown.length) return [];
+    if (shown.length > 2) return [formatPeriod(shown[0].start, shown.at(-1)!.end)];
+    return shown.map((p) => formatPeriod(p.start, p.end));
 }

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { GithubData, Repo } from "@/lib/github";
 
@@ -56,3 +56,6 @@ export const socialLinks: SocialLink[] = [
 ];
 
 export const linkedin = socialLinks.find((l) => l.provider === "linkedin");
+
+// Drop a photo.jpg into /public to use it instead of the GitHub avatar.
+export const photo = existsSync(path.join(process.cwd(), "public", "photo.jpg")) ? "/photo.jpg" : github.profile.avatarUrl;

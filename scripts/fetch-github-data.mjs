@@ -79,6 +79,52 @@ async function contributedRepos() {
     return repos.map((r) => r.data).filter((r) => r && !r.private);
 }
 
+// Automated accounts that show up as contributors but are not team members.
+const BOT_LOGINS = new Set([
+    "actions-user",
+    "allcontributors",
+    "claude",
+    "codecov-io",
+    "copilot",
+    "cursoragent",
+    "deepsource-autofix",
+    "dependabot",
+    "dependabot-preview",
+    "devin-ai-integration",
+    "github-actions",
+    "greenkeeperio-bot",
+    "imgbot",
+    "netlify",
+    "pre-commit-ci",
+    "renovate",
+    "semantic-release-bot",
+    "snyk-bot",
+    "vercel",
+    "web-flow",
+]);
+
+function isBot(author) {
+    if (!author?.login) return false;
+    const login = author.login.toLowerCase();
+    return author.type === "Bot" || login.endsWith("[bot]") || login.endsWith("-bot") || BOT_LOGINS.has(login);
+}
+
+// Groups commit days into periods of active development: a gap of more than
+// `maxGap` days without commits starts a new period.
+function activePeriods(days, maxGap = 45) {
+    const periods = [];
+    for (const day of days) {
+        const last = periods.at(-1);
+        if (last && (Date.parse(day) - Date.parse(last.end)) / 86_400_000 <= maxGap) {
+            last.end = day;
+            last.days++;
+        } else {
+            periods.push({ start: day, end: day, days: 1 });
+        }
+    }
+    return periods;
+}
+
 const BADGE_PATTERN = /shields\.io|badge|badgen|travis-ci|codecov|circleci|\/workflows\/|actions\/workflow|vercel\.com\/button|deploy-button|forthebadge|img\.shields|coveralls|snyk\.io|sonarcloud|app\.netlify\.com/i;
 
 function resolveImage(src, repo, readmePath) {
@@ -236,8 +282,9 @@ async function main() {
             // Stats still computing; reuse numbers from the previous build.
             ({ totalCommits, myCommits, totalLines, myLines, contributors } = prev.stats);
         } else if (stats) {
-            contributors = stats.length;
-            for (const c of stats) {
+            const people = stats.filter((c) => !isBot(c.author));
+            contributors = people.length;
+            for (const c of people) {
                 const isMe = c.author?.login?.toLowerCase() === USER.toLowerCase();
                 totalCommits += c.total;
                 for (const w of c.weeks) {
@@ -283,6 +330,7 @@ async function main() {
                 daysWorked,
                 firstCommit,
                 lastCommit,
+                activePeriods: activePeriods(days),
             },
         };
 

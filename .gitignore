@@ -42,3 +42,4 @@ next-env.d.ts
 
 # generated at build time by scripts/fetch-github-data.mjs
 /data/github.json
+/data

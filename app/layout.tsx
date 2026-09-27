@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "@/components/Nav";
 import { getPosts } from "@/lib/blog";
 import { github, socialLinks } from "@/lib/github-data";
-import { site } from "@/lib/site";
+import { education, organisations, site } from "@/lib/site";
+import { themeScript } from "@/lib/theme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,21 +40,39 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    // Structured data so search engines can tie this site to my other profiles.
+    const person = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name: site.name,
+        url: site.url,
+        image: github.profile.avatarUrl,
+        jobTitle: "Research Assistant",
+        worksFor: { "@type": "CollegeOrUniversity", name: organisations.tudelft.name, url: organisations.tudelft.url },
+        alumniOf: [...new Set(education.map((e) => e.org))].map((o) => ({ "@type": "CollegeOrUniversity", name: organisations[o].name, url: organisations[o].url })),
+        address: { "@type": "PostalAddress", addressLocality: "Delft", addressCountry: "NL" },
+        sameAs: socialLinks.map((l) => l.href),
+    };
     const updated = new Date(github.generatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
     return (
-        <html lang="en">
+        // The theme script adds the `dark` class before hydration.
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }} />
+            </head>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 <Nav showBlog={getPosts().length > 0} />
                 <main className="min-h-[70vh]">{children}</main>
-                <footer className="mt-24 border-t border-white/5">
-                    <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
+                <footer className="mt-24 border-t border-line">
+                    <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 py-8 text-sm text-subtle sm:flex-row sm:items-center sm:justify-between">
                         <p>
                             © {new Date().getFullYear()} {site.name} · {site.location}
                         </p>
                         <div className="flex gap-4">
                             {socialLinks.map((l) => (
-                                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="hover:text-fg">
                                     {l.label}
                                 </a>
                             ))}

@@ -23,21 +23,21 @@ export default function ContactForm({ endpoint }: { endpoint: string }) {
         }
     };
 
-    const input = "w-full rounded-xl border border-white/10 bg-zinc-900/60 px-4 py-3 text-white placeholder:text-zinc-600 focus:border-amber-400/60 focus:outline-none";
+    const input = "w-full rounded-xl border border-line bg-surface px-4 py-3 text-fg placeholder:text-subtle focus:border-accent focus:outline-none";
 
     return (
-        <form onSubmit={onSubmit} className="space-y-4 rounded-3xl border border-white/10 bg-zinc-950 p-8">
+        <form onSubmit={onSubmit} className="space-y-4 rounded-3xl border border-line bg-surface p-8">
             <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-zinc-400">
+                <label className="block text-sm text-muted">
                     Name
                     <input required name="name" className={`${input} mt-1.5`} placeholder="Your name" />
                 </label>
-                <label className="block text-sm text-zinc-400">
+                <label className="block text-sm text-muted">
                     Your email
                     <input required type="email" name="email" className={`${input} mt-1.5`} placeholder="So I can reply" />
                 </label>
             </div>
-            <label className="block text-sm text-zinc-400">
+            <label className="block text-sm text-muted">
                 Message
                 <textarea
                     required
@@ -50,12 +50,12 @@ export default function ContactForm({ endpoint }: { endpoint: string }) {
             <button
                 type="submit"
                 disabled={status === "sending"}
-                className="rounded-full bg-white px-6 py-2.5 text-sm font-medium text-black transition hover:bg-amber-300 disabled:opacity-50"
+                className="rounded-full bg-fg px-6 py-2.5 text-sm font-medium text-bg transition hover:opacity-85 disabled:opacity-50"
             >
                 {status === "sending" ? "Sending…" : "Send message"}
             </button>
-            {status === "sent" && <p className="text-sm text-emerald-400">Thanks! Your message has been sent.</p>}
-            {status === "error" && <p className="text-sm text-rose-400">Something went wrong. Please try LinkedIn instead.</p>}
+            {status === "sent" && <p className="text-sm text-emerald-600 dark:text-emerald-400">Thanks! Your message has been sent.</p>}
+            {status === "error" && <p className="text-sm text-rose-600 dark:text-rose-400">Something went wrong. Please try LinkedIn instead.</p>}
         </form>
     );
 }

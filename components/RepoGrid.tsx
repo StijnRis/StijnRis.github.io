@@ -30,17 +30,17 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
     );
 
     const pill = (active: boolean) =>
-        `whitespace-nowrap rounded-full px-3 py-1 text-sm transition ${active ? "bg-white text-black" : "bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"}`;
+        `whitespace-nowrap rounded-full px-3 py-1 text-sm transition ${active ? "bg-fg text-bg" : "bg-surface-muted text-muted hover:text-fg"}`;
 
     return (
         <div>
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <label className="flex items-center gap-2 text-sm text-zinc-500">
+                <label className="flex items-center gap-2 text-sm text-subtle">
                     Language
                     <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 focus:border-amber-400/60 focus:outline-none"
+                        className="rounded-full border border-line bg-surface px-3 py-1.5 text-sm text-fg focus:border-accent focus:outline-none"
                     >
                         <option value="">All languages ({repos.length})</option>
                         {languages.map(([l, count]) => (
@@ -50,7 +50,7 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
                         ))}
                     </select>
                 </label>
-                <div className="flex items-center gap-2 text-sm text-zinc-500">
+                <div className="flex items-center gap-2 text-sm text-subtle">
                     Sort
                     {(Object.keys(sorts) as SortKey[]).map((k) => (
                         <button key={k} onClick={() => setSort(k)} className={pill(sort === k)}>

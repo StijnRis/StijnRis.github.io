@@ -26,12 +26,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
     return (
         <Section className="max-w-3xl pt-20">
-            <Link href="/blog/" className="text-sm text-zinc-500 hover:text-white">
+            <Link href="/blog/" className="text-sm text-subtle hover:text-fg">
                 ← All posts
             </Link>
-            <time className="mt-8 block font-mono text-xs text-zinc-600">{formatDate(post.date)}</time>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white">{post.title}</h1>
-            <article className="prose prose-invert prose-zinc mt-10 max-w-none prose-a:text-amber-400 prose-pre:border prose-pre:border-white/10" dangerouslySetInnerHTML={{ __html: post.html }} />
+            <time className="mt-8 block font-mono text-xs text-subtle">{formatDate(post.date)}</time>
+            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-fg">{post.title}</h1>
+            <article className="prose prose-zinc dark:prose-invert mt-10 max-w-none prose-a:text-accent prose-pre:border prose-pre:border-line" dangerouslySetInnerHTML={{ __html: post.html }} />
         </Section>
     );
 }

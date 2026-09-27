@@ -21,6 +21,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      # To commit the screenshots.
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,21 +59,38 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
 
-      # Deployed with the site so the README can show an always up-to-date image
-      # without committing a new screenshot on every build.
+      # Light and dark screenshots of the homepage for the README.
       - name: Screenshot homepage
         run: |
           python3 -m http.server 8080 --directory out >/dev/null 2>&1 &
           sleep 2
-          google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
-            --window-size=1440,1000 --virtual-time-budget=10000 \
-            --screenshot="$PWD/out/screenshot.png" http://localhost:8080/
-          test -s out/screenshot.png
+          mkdir -p docs
+          for theme in light dark; do
+            google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
+              --window-size=1440,1000 --virtual-time-budget=10000 \
+              --screenshot="$PWD/docs/screenshot-$theme.png" "http://localhost:8080/?theme=$theme"
+            test -s "docs/screenshot-$theme.png"
+          done
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
+
+      # Pushes made with GITHUB_TOKEN don't trigger workflows, so this can't loop.
+      - name: Commit screenshots
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git add docs/screenshot-*.png
+          if git diff --cached --quiet; then
+            echo "Screenshots unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update homepage screenshots"
+          git pull --rebase origin main
+          git push origin HEAD:main
 
   deploy:
     environment:

@@ -3,12 +3,12 @@ import RepoGrid from "@/components/RepoGrid";
 import { PageHeader, Section } from "@/components/ui";
 import { github } from "@/lib/github-data";
 
-export const metadata: Metadata = { title: "Work" };
+export const metadata: Metadata = { title: "Projects" };
 
-export default function Work() {
+export default function Projects() {
     return (
         <>
-            <PageHeader eyebrow="Work" title={`${github.totals.repos} projects I've worked on`} />
+            <PageHeader eyebrow="Projects" title={`${github.totals.repos} projects I've worked on`} />
             <Section>
                 <RepoGrid repos={github.repos} />
             </Section>
