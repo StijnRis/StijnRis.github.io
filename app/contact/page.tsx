@@ -1,14 +1,10 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
 import { PageHeader, Section } from "@/components/ui";
+import { linkedin, socialLinks } from "@/lib/github-data";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Contact" };
-
-const channels = [
-    { label: "LinkedIn", value: "in/stijn-risseeuw", href: site.links.linkedin },
-    { label: "GitHub", value: "@StijnRis", href: site.links.github },
-];
 
 export default function Contact() {
     return (
@@ -19,9 +15,9 @@ export default function Contact() {
 
             <Section className="grid gap-12 md:grid-cols-[1fr_1.3fr]">
                 <div className="space-y-4">
-                    {channels.map((c) => (
+                    {socialLinks.map((c) => (
                         <a
-                            key={c.label}
+                            key={c.href}
                             href={c.href}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -42,12 +38,12 @@ export default function Contact() {
                 </div>
                 {site.formEndpoint ? (
                     <ContactForm endpoint={site.formEndpoint} />
-                ) : (
+                ) : linkedin ? (
                     <div className="flex flex-col justify-center rounded-3xl border border-white/10 bg-zinc-950 p-8">
                         <h2 className="text-2xl font-semibold text-white">The fastest way to reach me</h2>
                         <p className="mt-3 text-zinc-400">Send me a message on LinkedIn and I&apos;ll get back to you.</p>
                         <a
-                            href={site.links.linkedin}
+                            href={linkedin.href}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-6 self-start rounded-full bg-white px-6 py-2.5 text-sm font-medium text-black transition hover:bg-amber-300"
@@ -55,7 +51,7 @@ export default function Contact() {
                             Message me on LinkedIn ↗
                         </a>
                     </div>
-                )}
+                ) : null}
             </Section>
         </>
     );

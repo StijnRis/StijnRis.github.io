@@ -17,6 +17,8 @@ export type RepoStats = {
 export type Repo = {
     name: string;
     fullName: string;
+    owner: string;
+    owned: boolean;
     url: string;
     description: string | null;
     readmeSummary: string | null;
@@ -33,13 +35,22 @@ export type Repo = {
     lastActivity: string;
     stats: RepoStats;
     bonus: number;
-    score: number;
-    scoreComponents: Record<string, number>;
+    relevance: number;
+    relevanceComponents: Record<string, number>;
 };
 
 export type GithubData = {
     generatedAt: string;
-    profile: { login: string; name: string | null; avatarUrl: string; url: string; followers: number; publicRepos: number };
+    profile: {
+        login: string;
+        name: string | null;
+        avatarUrl: string;
+        url: string;
+        followers: number;
+        publicRepos: number;
+        website: string | null;
+        socials: { provider: string; url: string }[];
+    };
     totals: { repos: number; stars: number; commits: number; linesChanged: number; daysWorked: number; hackathons: number; languages: { name: string; bytes: number }[] };
     repos: Repo[];
 };

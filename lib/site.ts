@@ -13,10 +13,6 @@ export const site = {
     // exposing an email address. Leave empty to hide the contact form.
     formEndpoint: "",
     url: "https://stijnris.github.io",
-    links: {
-        github: "https://github.com/StijnRis",
-        linkedin: "https://www.linkedin.com/in/stijn-risseeuw/",
-    },
 };
 
 export const experience = [

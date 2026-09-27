@@ -10,7 +10,16 @@ function load(): GithubData {
         console.warn("data/github.json not found, run `pnpm fetch-data` first. Rendering without repos.");
         return {
             generatedAt: new Date().toISOString(),
-            profile: { login: "StijnRis", name: null, avatarUrl: "https://github.com/StijnRis.png", url: "https://github.com/StijnRis", followers: 0, publicRepos: 0 },
+            profile: {
+                login: "StijnRis",
+                name: null,
+                avatarUrl: "https://github.com/StijnRis.png",
+                url: "https://github.com/StijnRis",
+                followers: 0,
+                publicRepos: 0,
+                website: null,
+                socials: [],
+            },
             totals: { repos: 0, stars: 0, commits: 0, linesChanged: 0, daysWorked: 0, hackathons: 0, languages: [] },
             repos: [],
         };
@@ -19,6 +28,31 @@ function load(): GithubData {
 
 export const github = load();
 
-export function getRepo(name: string): Repo | undefined {
-    return github.repos.find((r) => r.name === name);
+export function getRepo(fullName: string): Repo | undefined {
+    return github.repos.find((r) => r.fullName === fullName);
 }
+
+export type SocialLink = { provider: string; label: string; value: string; href: string };
+
+const providerLabels: Record<string, string> = { github: "GitHub", linkedin: "LinkedIn", twitter: "X", youtube: "YouTube", mastodon: "Mastodon", bluesky: "Bluesky" };
+
+function toLink(provider: string, href: string): SocialLink {
+    const url = new URL(href);
+    const host = url.hostname.replace(/^www\./, "");
+    const name = host.split(".")[0];
+    return {
+        provider,
+        label: providerLabels[provider] ?? name.charAt(0).toUpperCase() + name.slice(1),
+        value: (host + url.pathname).replace(/\/$/, ""),
+        href,
+    };
+}
+
+// GitHub plus the accounts linked on the GitHub profile (the profile website is
+// this site itself, so it is left out).
+export const socialLinks: SocialLink[] = [
+    toLink("github", github.profile.url),
+    ...github.profile.socials.map((s) => toLink(s.provider, s.url)),
+];
+
+export const linkedin = socialLinks.find((l) => l.provider === "linkedin");

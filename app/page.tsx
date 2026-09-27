@@ -1,6 +1,6 @@
 import RepoCard from "@/components/RepoCard";
 import { Button, Eyebrow, Section } from "@/components/ui";
-import { github } from "@/lib/github-data";
+import { github, linkedin } from "@/lib/github-data";
 import { site } from "@/lib/site";
 
 export default function Home() {
@@ -53,7 +53,7 @@ export default function Home() {
                 </div>
                 <div className="grid gap-6 md:grid-cols-3">
                     {top.map((r) => (
-                        <RepoCard key={r.name} repo={r} />
+                        <RepoCard key={r.fullName} repo={r} />
                     ))}
                 </div>
             </Section>
@@ -66,9 +66,11 @@ export default function Home() {
                     </p>
                     <div className="mt-8 flex flex-wrap gap-3">
                         <Button href="/contact">Contact me</Button>
-                        <Button href={site.links.linkedin} variant="ghost">
-                            LinkedIn ↗
-                        </Button>
+                        {linkedin && (
+                            <Button href={linkedin.href} variant="ghost">
+                                LinkedIn ↗
+                            </Button>
+                        )}
                     </div>
                 </div>
             </Section>

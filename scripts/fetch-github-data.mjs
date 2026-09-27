@@ -1,5 +1,6 @@
-// Fetches all public repos of a GitHub user, computes contribution stats and a
-// ranking score per repo, and writes the result to data/github.json.
+// Fetches all public repos a GitHub user owns or has committed to, computes
+// contribution stats and a relevance score per repo, and writes the result to
+// data/github.json.
 //
 // Usage: GITHUB_TOKEN=... node scripts/fetch-github-data.mjs
 // Without a token it still works, but hits the 60 requests/hour limit quickly.
@@ -65,6 +66,19 @@ async function myCommitDays(fullName) {
     return [...new Set(commits.map((c) => dayFormat.format(new Date(c.commit.author.date))))].sort();
 }
 
+// Public repos owned by someone else that contain commits by me. The search
+// API also returns private repos the token can access, so filter those out.
+async function contributedRepos() {
+    const names = new Set();
+    for (let page = 1; page <= 10; page++) {
+        const { data } = await gh(`/search/commits?q=author:${USER}+-user:${USER}&per_page=100&page=${page}`);
+        for (const item of data.items) if (!item.repository.private) names.add(item.repository.full_name);
+        if (page * 100 >= Math.min(data.total_count, 1000)) break;
+    }
+    const repos = await Promise.all([...names].map((n) => gh(`/repos/${n}`, { allow404: true })));
+    return repos.map((r) => r.data).filter((r) => r && !r.private);
+}
+
 const BADGE_PATTERN = /shields\.io|badge|badgen|travis-ci|codecov|circleci|\/workflows\/|actions\/workflow|vercel\.com\/button|deploy-button|forthebadge|img\.shields|coveralls|snyk\.io|sonarcloud|app\.netlify\.com/i;
 
 function resolveImage(src, repo, readmePath) {
@@ -123,8 +137,8 @@ function readmeSummary(markdown) {
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const logScale = (x, max) => clamp01(Math.log1p(Math.max(0, x)) / Math.log1p(max));
 
-// Score in [0, 100]. Each component is normalised to [0, 1] and weighted.
-function computeScore(s, now) {
+// Relevance in [0, 100]. Each component is normalised to [0, 1] and weighted.
+function computeRelevance(s, now) {
     const monthsSincePush = (now - new Date(s.lastActivity).getTime()) / (30 * 24 * 3600 * 1000);
     const components = {
         ownership: clamp01(0.5 * s.commitShare + 0.5 * s.lineShare),
@@ -146,9 +160,9 @@ function computeScore(s, now) {
         recency: 0.15,
         polish: 0.2,
     };
-    let score = 0;
-    for (const k of Object.keys(weights)) score += weights[k] * components[k];
-    return { score: Math.round(score * 1000) / 10, components };
+    let relevance = 0;
+    for (const k of Object.keys(weights)) relevance += weights[k] * components[k];
+    return { relevance: Math.round(relevance * 1000) / 10, components };
 }
 
 // Hackathon projects get a bonus, tutorials a penalty. The README is not
@@ -174,10 +188,12 @@ async function main() {
     const previousByName = new Map(previous.repos.map((r) => [r.name, r]));
 
     const { data: profile } = await gh(`/users/${USER}`);
-    const repos = (await paginate(`/users/${USER}/repos?per_page=100&type=owner&sort=pushed`)).filter(
-        (r) => !r.private
-    );
-    console.log(`Found ${repos.length} public repos for ${USER}`);
+    const owned = (await paginate(`/users/${USER}/repos?per_page=100&type=owner&sort=pushed`)).filter((r) => !r.private);
+    const contributed = await contributedRepos();
+    const repos = [...owned, ...contributed];
+    console.log(`Found ${owned.length} owned and ${contributed.length} contributed public repos for ${USER}`);
+
+    const { data: socials } = await gh(`/users/${USER}/social_accounts`);
 
     // Kick off stats computation for all repos first, so later polls are fast.
     await Promise.all(repos.map((r) => gh(`/repos/${r.full_name}/stats/contributors`, { allow404: true }).catch(() => null)));
@@ -240,6 +256,8 @@ async function main() {
         const summary = {
             name: repo.name,
             fullName: repo.full_name,
+            owner: repo.owner.login,
+            owned: repo.owner.login.toLowerCase() === USER.toLowerCase(),
             url: repo.html_url,
             description: repo.description || null,
             readmeSummary: readme ? readmeSummary(readme) : null,
@@ -268,7 +286,7 @@ async function main() {
             },
         };
 
-        const { score, components } = computeScore(
+        const { relevance, components } = computeRelevance(
             {
                 ...summary.stats,
                 stars: summary.stars,
@@ -281,10 +299,10 @@ async function main() {
             },
             now
         );
-        summary.scoreComponents = components;
+        summary.relevanceComponents = components;
         summary.bonus = keywordBonus(repo, readme);
-        summary.score = Math.round((score + summary.bonus) * 10) / 10;
-        console.log(`  ${repo.name.padEnd(40)} score ${summary.score.toFixed(1).padStart(5)}  commits ${myCommits}/${totalCommits}`);
+        summary.relevance = Math.round((relevance + summary.bonus) * 10) / 10;
+        console.log(`  ${repo.full_name.padEnd(50)} relevance ${summary.relevance.toFixed(1).padStart(5)}  commits ${myCommits}/${totalCommits}`);
         return summary;
     }
 
@@ -295,7 +313,7 @@ async function main() {
         .filter((r) => r.name.toLowerCase() !== `${USER.toLowerCase()}.github.io`)
         // Forks where I never committed are not my work.
         .filter((r) => !(r.fork && r.stats.myCommits === 0))
-        .sort((a, b) => b.score - a.score);
+        .sort((a, b) => b.relevance - a.relevance);
 
     const totals = {
         repos: visible.length,
@@ -323,6 +341,9 @@ async function main() {
             url: profile.html_url,
             followers: profile.followers,
             publicRepos: profile.public_repos,
+            website: profile.blog || null,
+            // Accounts linked on the GitHub profile, e.g. LinkedIn.
+            socials: socials.map((a) => ({ provider: a.provider, url: a.url })),
         },
         totals,
         repos: visible,

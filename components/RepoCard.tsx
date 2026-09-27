@@ -53,15 +53,11 @@ function Languages({ repo }: { repo: Repo }) {
 export default function RepoCard({ repo }: { repo: Repo }) {
     const description = repo.description ?? repo.readmeSummary;
     const s = repo.stats;
-    const breakdown = [
-        ...Object.entries(repo.scoreComponents).map(([k, v]) => `${k}: ${Math.round(v * 100)}%`),
-        ...(repo.bonus ? [`bonus: ${repo.bonus > 0 ? "+" : ""}${repo.bonus} pts`] : []),
-    ].join("\n");
-
     const stats = [
         ...(repo.stars > 0 ? [{ label: "Stars", value: `★ ${repo.stars}` }] : []),
         ...(s.contributors > 1 ? [{ label: "Team", value: `${s.contributors} people` }] : []),
-        { label: "Worked", value: `${s.daysWorked} day${s.daysWorked === 1 ? "" : "s"}`, title: `Days with commits by me, ${s.firstCommit} to ${s.lastCommit}` },
+        // Short projects are the norm, so only call out the longer ones.
+        ...(s.daysWorked > 15 ? [{ label: "of development", value: `${s.daysWorked} days`, title: `Days with commits by me, ${s.firstCommit} to ${s.lastCommit}` }] : []),
     ];
 
     return (
@@ -73,16 +69,11 @@ export default function RepoCard({ repo }: { repo: Repo }) {
                 ) : (
                     <Placeholder repo={repo} />
                 )}
-                <span
-                    className="absolute right-3 top-3 rounded-full bg-black/70 px-2.5 py-1 font-mono text-xs text-amber-300 backdrop-blur"
-                    title={`Score breakdown\n${breakdown}`}
-                >
-                    {repo.score.toFixed(0)} pts
-                </span>
             </a>
 
             <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
+                    {!repo.owned && <div className="font-mono text-xs text-zinc-500">{repo.owner} /</div>}
                     <h3 className="text-lg font-semibold text-white">
                         <a href={repo.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             {prettyName(repo.name)}
@@ -103,13 +94,16 @@ export default function RepoCard({ repo }: { repo: Repo }) {
                     )}
                 </div>
 
-                <div className="mt-auto grid gap-2 border-t border-white/5 pt-3" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
-                    {stats.map((st) => (
-                        <Stat key={st.label} {...st} />
-                    ))}
+                <div className="mt-auto flex flex-col gap-3 border-t border-white/5 pt-3">
+                    {stats.length > 0 && (
+                        <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
+                            {stats.map((st) => (
+                                <Stat key={st.label} {...st} />
+                            ))}
+                        </div>
+                    )}
+                    <Languages repo={repo} />
                 </div>
-
-                <Languages repo={repo} />
 
                 <div className="flex justify-end gap-3 text-xs text-zinc-500">
                     {repo.homepage && (

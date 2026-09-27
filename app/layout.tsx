@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "@/components/Nav";
 import { getPosts } from "@/lib/blog";
-import { github } from "@/lib/github-data";
+import { github, socialLinks } from "@/lib/github-data";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -52,12 +52,11 @@ export default function RootLayout({
                             © {new Date().getFullYear()} {site.name} · {site.location}
                         </p>
                         <div className="flex gap-4">
-                            <a href={site.links.github} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                                GitHub
-                            </a>
-                            <a href={site.links.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-white">
-                                LinkedIn
-                            </a>
+                            {socialLinks.map((l) => (
+                                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                                    {l.label}
+                                </a>
+                            ))}
                             <span title="GitHub data is refreshed daily">Updated {updated}</span>
                         </div>
                     </div>

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
 import { Button, Eyebrow, Section } from "@/components/ui";
-import { github } from "@/lib/github-data";
+import { github, linkedin } from "@/lib/github-data";
 import { education, experience, site } from "@/lib/site";
 
 export const metadata: Metadata = { title: "About" };
@@ -34,9 +34,11 @@ export default function About() {
                         {hasCv && (
                             <Button href="/cv.pdf">Download CV ↓</Button>
                         )}
-                        <Button href={site.links.linkedin} variant={hasCv ? "ghost" : "primary"}>
-                            Full profile on LinkedIn ↗
-                        </Button>
+                        {linkedin && (
+                            <Button href={linkedin.href} variant={hasCv ? "ghost" : "primary"}>
+                                Full profile on LinkedIn ↗
+                            </Button>
+                        )}
                     </div>
                 </div>
 

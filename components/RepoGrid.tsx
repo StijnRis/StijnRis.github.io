@@ -5,9 +5,9 @@ import RepoCard from "@/components/RepoCard";
 import { languageBreakdown, type Repo } from "@/lib/github";
 
 const sorts = {
-    score: { label: "Score", fn: (a: Repo, b: Repo) => b.score - a.score },
+    relevance: { label: "Relevance", fn: (a: Repo, b: Repo) => b.relevance - a.relevance },
     recent: { label: "Recent", fn: (a: Repo, b: Repo) => Date.parse(b.lastActivity) - Date.parse(a.lastActivity) },
-    stars: { label: "Stars", fn: (a: Repo, b: Repo) => b.stars - a.stars || b.score - a.score },
+    stars: { label: "Stars", fn: (a: Repo, b: Repo) => b.stars - a.stars || b.relevance - a.relevance },
 };
 
 type SortKey = keyof typeof sorts;
@@ -15,17 +15,17 @@ type SortKey = keyof typeof sorts;
 const repoLanguages = (r: Repo) => languageBreakdown(r).map((l) => l.name).filter((l) => l !== "Other");
 
 export default function RepoGrid({ repos }: { repos: Repo[] }) {
-    const [sort, setSort] = useState<SortKey>("score");
-    const [language, setLanguage] = useState<string>("All");
+    const [sort, setSort] = useState<SortKey>("relevance");
+    const [language, setLanguage] = useState<string>("");
 
     const languages = useMemo(() => {
         const counts = new Map<string, number>();
         for (const r of repos) for (const l of repoLanguages(r)) counts.set(l, (counts.get(l) ?? 0) + 1);
-        return ["All", ...[...counts.entries()].sort((a, b) => b[1] - a[1]).map(([l]) => l)];
+        return [...counts.entries()].sort((a, b) => b[1] - a[1]);
     }, [repos]);
 
     const shown = useMemo(
-        () => repos.filter((r) => language === "All" || repoLanguages(r).includes(language)).sort(sorts[sort].fn),
+        () => repos.filter((r) => !language || repoLanguages(r).includes(language)).sort(sorts[sort].fn),
         [repos, sort, language]
     );
 
@@ -35,13 +35,21 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
     return (
         <div>
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-2">
-                    {languages.map((l) => (
-                        <button key={l} onClick={() => setLanguage(l)} className={pill(language === l)}>
-                            {l}
-                        </button>
-                    ))}
-                </div>
+                <label className="flex items-center gap-2 text-sm text-zinc-500">
+                    Language
+                    <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-200 focus:border-amber-400/60 focus:outline-none"
+                    >
+                        <option value="">All languages ({repos.length})</option>
+                        {languages.map(([l, count]) => (
+                            <option key={l} value={l}>
+                                {l} ({count})
+                            </option>
+                        ))}
+                    </select>
+                </label>
                 <div className="flex items-center gap-2 text-sm text-zinc-500">
                     Sort
                     {(Object.keys(sorts) as SortKey[]).map((k) => (
@@ -53,7 +61,7 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {shown.map((r) => (
-                    <RepoCard key={r.name} repo={r} />
+                    <RepoCard key={r.fullName} repo={r} />
                 ))}
             </div>
         </div>
