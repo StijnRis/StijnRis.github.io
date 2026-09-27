@@ -1,25 +1,49 @@
 # stijnris.github.io
 
-Personal website of Stijn Risseeuw: a static Next.js site hosted on GitHub Pages.
+[![Build and deploy site](https://github.com/StijnRis/StijnRis.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/StijnRis/StijnRis.github.io/actions/workflows/deploy.yml)
 
-## How it works
+[![Screenshot of the homepage](https://stijnris.github.io/screenshot.png)](https://stijnris.github.io)
 
-- `scripts/fetch-github-data.mjs` fetches all public repos of `StijnRis` at build time and writes
-  `data/github.json` (not committed). Per repo it collects the GitHub description, topics, languages,
-  README image and contribution stats, and computes a score from 0 to 100. Repos that mention
-  "hackathon" get +10, tutorials get −20.
-- To change how a project shows up, edit the repo on GitHub (description, topics, website, README image).
-- `content/blog/*.md` are blog posts (see `content/blog/README.md`). The Blog link appears once there is a post.
-- `lib/site.ts` holds the little hand-written content (bio links, experience, education).
-- `.github/workflows/deploy.yml` builds and deploys on every push to `main` and once a day.
+My personal website at **[stijnris.github.io](https://stijnris.github.io)**: who I am, what I've built and how to reach me.
+It's a static [Next.js](https://nextjs.org) site on GitHub Pages that keeps itself up to date from my GitHub profile.
+
+## Features
+
+- **Projects from GitHub.** Every public repo I own or have committed to is shown as a card, with its
+  description, topics, README image, languages, team size and development time.
+- **Relevance ranking.** Projects are sorted by a relevance score based on my effort, days of development,
+  polish (description, demo, image, topics), recency, stars and ownership. Hackathon projects get
+  +10, tutorials −20.
+- **Links from GitHub.** Contact links come from the social accounts on my GitHub profile.
+- **Markdown blog.** Posts are plain `.md` files in [`content/blog`](content/blog).
+- **Always fresh.** A GitHub Action rebuilds and deploys on every push and once a day, and takes the screenshot above.
+
+## Updating content
+
+| To change…                         | Edit                                                                    |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| How a project looks                | The repo on GitHub: description, topics, website and README image       |
+| Contact links                      | Social accounts on my [GitHub profile](https://github.com/StijnRis)     |
+| Blog posts                         | [`content/blog/*.md`](content/blog/README.md)                           |
+| Bio, experience and education      | [`lib/site.ts`](lib/site.ts) and [`app/about/page.tsx`](app/about/page.tsx) |
+| Photo or CV                        | Add `public/photo.jpg` or `public/cv.pdf`                               |
 
 ## Development
 
+Requires Node.js and [pnpm](https://pnpm.io).
+
 ```bash
 pnpm install
-GITHUB_TOKEN=$(gh auth token) pnpm fetch-data   # needed once before `pnpm dev`
-pnpm dev
+GITHUB_TOKEN=$(gh auth token) pnpm fetch-data   # writes data/github.json, needed once before dev
+pnpm dev                                        # http://localhost:3000
+pnpm build                                      # fetches fresh data and exports the site to out/
 ```
 
-`pnpm build` fetches fresh data and builds the static site into `out/`.
-Add `public/photo.jpg` and/or `public/cv.pdf` and the About page will pick them up automatically.
+## How it works
+
+1. [`scripts/fetch-github-data.mjs`](scripts/fetch-github-data.mjs) collects repos through the GitHub API
+   (owned repos, plus other public repos found through commit search), computes stats and relevance,
+   and writes `data/github.json`. This file is generated, so it's not committed.
+2. `next build` renders every page to static HTML in `out/`.
+3. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs both steps, screenshots the
+   homepage and deploys `out/` to GitHub Pages.

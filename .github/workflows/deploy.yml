@@ -54,6 +54,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
 
+      # Deployed with the site so the README can show an always up-to-date image
+      # without committing a new screenshot on every build.
+      - name: Screenshot homepage
+        run: |
+          python3 -m http.server 8080 --directory out >/dev/null 2>&1 &
+          sleep 2
+          google-chrome --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
+            --window-size=1440,1000 --virtual-time-budget=10000 \
+            --screenshot="$PWD/out/screenshot.png" http://localhost:8080/
+          test -s out/screenshot.png
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
