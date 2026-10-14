@@ -143,17 +143,29 @@ function resolveImage(src, repo, readmePath) {
     return `https://raw.githubusercontent.com/${repo.full_name}/${repo.default_branch}/${rel}`;
 }
 
-function findReadmeImage(markdown, repo, readmePath) {
-    const candidates = [];
-    const re = /!\[[^\]]*\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)|<img[^>]+src=["']([^"']+)["']/gi;
+const LOGO_PATTERN = /logo|icon|favicon|brand|emblem/i;
+const SCREENSHOT_PATTERN = /screenshot|screen[-_ ]?shot|demo|preview|showcase|gameplay|ui\b|app\b/i;
+
+// Picks a logo and a screenshot from the README's images. An image counts as a
+// logo when its file name or alt text says so; the screenshot is the first
+// other image, preferring ones that are named like a screenshot.
+function findReadmeImages(markdown, repo, readmePath) {
+    const re = /!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)|<img[^>]*?src=["']([^"']+)["'][^>]*>/gi;
+    const logos = [];
+    const shots = [];
     let m;
-    while ((m = re.exec(markdown))) candidates.push(m[1] || m[2]);
-    for (const src of candidates) {
+    while ((m = re.exec(markdown))) {
+        const src = m[2] || m[3];
         if (BADGE_PATTERN.test(src)) continue;
+        const alt = m[1] ?? (m[0].match(/alt=["']([^"']*)["']/i)?.[1] || "");
         const url = resolveImage(src, repo, readmePath);
-        if (url) return url;
+        if (!url) continue;
+        const name = url.split(/[?#]/)[0].split("/").pop();
+        const entry = { url, text: `${name} ${alt}` };
+        (LOGO_PATTERN.test(entry.text) ? logos : shots).push(entry);
     }
-    return null;
+    const shot = shots.find((s) => SCREENSHOT_PATTERN.test(s.text)) ?? shots[0];
+    return { image: shot?.url ?? null, logo: logos[0]?.url ?? null };
 }
 
 // Lines from framework templates or setup instructions are not a description.
@@ -309,7 +321,7 @@ async function main() {
             description: repo.description || null,
             readmeSummary: readme ? readmeSummary(readme) : null,
             homepage: repo.homepage || null,
-            image: readme ? findReadmeImage(readme, repo, readmePath) : null,
+            ...(readme ? findReadmeImages(readme, repo, readmePath) : { image: null, logo: null }),
             language: repo.language,
             languages: languagesRes.data || {},
             topics: repo.topics || [],

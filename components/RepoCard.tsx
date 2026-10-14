@@ -74,11 +74,17 @@ export default function RepoCard({ repo }: { repo: Repo }) {
             </a>
 
             <div className="flex flex-1 flex-col p-5">
-                <h3 className="text-lg font-semibold leading-snug text-fg">
-                    <a href={repo.homepage || repo.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {prettyName(repo.name)}
-                    </a>
-                </h3>
+                <div className="flex items-center gap-3">
+                    {repo.logo && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={repo.logo} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-white object-contain p-1" />
+                    )}
+                    <h3 className="text-lg font-semibold leading-snug text-fg">
+                        <a href={repo.homepage || repo.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            {prettyName(repo.name)}
+                        </a>
+                    </h3>
+                </div>
                 {(dates.length > 0 || meta.length > 0) && (
                     <p className="mt-1 text-xs text-subtle">
                         {dates.length > 0 && (

@@ -27,6 +27,7 @@ export type Repo = {
     readmeSummary: string | null;
     homepage: string | null;
     image: string | null;
+    logo?: string | null;
     language: string | null;
     languages: Record<string, number>;
     topics: string[];
