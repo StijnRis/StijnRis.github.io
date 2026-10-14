@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RepoCard from "@/components/RepoCard";
 import { languageBreakdown, type Repo } from "@/lib/github";
 
@@ -17,6 +17,20 @@ const repoLanguages = (r: Repo) => languageBreakdown(r).map((l) => l.name).filte
 export default function RepoGrid({ repos }: { repos: Repo[] }) {
     const [sort, setSort] = useState<SortKey>("relevance");
     const [language, setLanguage] = useState<string>("");
+
+    // Read the sort from the URL after mount (the page is statically rendered).
+    useEffect(() => {
+        const param = new URLSearchParams(window.location.search).get("sort");
+        if (param && param in sorts) setSort(param as SortKey);
+    }, []);
+
+    const chooseSort = (key: SortKey) => {
+        setSort(key);
+        const url = new URL(window.location.href);
+        if (key === "relevance") url.searchParams.delete("sort");
+        else url.searchParams.set("sort", key);
+        window.history.replaceState(null, "", url);
+    };
 
     const languages = useMemo(() => {
         const counts = new Map<string, number>();
@@ -53,7 +67,7 @@ export default function RepoGrid({ repos }: { repos: Repo[] }) {
                 <div className="flex items-center gap-2 text-sm text-subtle">
                     Sort
                     {(Object.keys(sorts) as SortKey[]).map((k) => (
-                        <button key={k} onClick={() => setSort(k)} className={pill(sort === k)}>
+                        <button key={k} onClick={() => chooseSort(k)} className={pill(sort === k)}>
                             {sorts[k].label}
                         </button>
                     ))}
